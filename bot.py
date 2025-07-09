@@ -1,8 +1,8 @@
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import (
-    Updater, CommandHandler, CallbackContext, 
-    CallbackQueryHandler, MessageHandler, Filters
+    Application, CommandHandler, ContextTypes, 
+    CallbackQueryHandler, MessageHandler, filters
 )
 
 # Configuration with your actual details
@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def start(update: Update, context: CallbackContext) -> None:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     keyboard = [
         [
@@ -29,7 +29,7 @@ def start(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("✅ I've Completed All Tasks", callback_data='submit')]
     ]
     
-    update.message.reply_text(
+    await update.message.reply_text(
         f"🌟 *WELCOME {user.first_name} TO PEAFI AIRDROP!* 🌟\n\n"
         "💰 *Claim 100 SOL Reward* 💰\n\n"
         "Complete these simple steps:\n"
@@ -41,12 +41,12 @@ def start(update: Update, context: CallbackContext) -> None:
         parse_mode='Markdown'
     )
 
-def handle_submission(update: Update, context: CallbackContext) -> None:
+async def handle_submission(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    query.answer()
+    await query.answer()
     
     # Edit original message to show completion
-    query.edit_message_text(
+    await query.edit_message_text(
         "🎉 *TASKS SUBMITTED! WELL DONE!*\n\n"
         "ℹ️ Hope you didn't cheat the system!\n\n"
         "Please send your Solana wallet address now.\n\n"
@@ -54,12 +54,12 @@ def handle_submission(update: Update, context: CallbackContext) -> None:
         parse_mode='Markdown'
     )
 
-def handle_wallet(update: Update, context: CallbackContext) -> None:
+async def handle_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     wallet = update.message.text.strip()
     user = update.effective_user
     
     # Send congratulations message
-    update.message.reply_text(
+    await update.message.reply_text(
         f"🚀 *CONGRATULATIONS {user.first_name.upper()}!* 🚀\n\n"
         "YOU PASSED PEAFI AIRDROP!\n\n"
         f"💸 *100 SOL* is on its way to your wallet:\n`{wallet}`\n\n"
@@ -72,20 +72,18 @@ def handle_wallet(update: Update, context: CallbackContext) -> None:
     logger.info(f"New submission: {user.username} | Wallet: {wallet}")
 
 def main() -> None:
-    updater = Updater(BOT_TOKEN)
-    dp = updater.dispatcher
+    # Create the Application
+    application = Application.builder().token(BOT_TOKEN).build()
 
     # Register handlers
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(handle_submission, pattern='^submit$'))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_wallet))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CallbackQueryHandler(handle_submission, pattern='^submit$'))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_wallet))
 
     # Start the bot
-    updater.start_polling()
+    application.run_polling()
     logger.info("🤖 Bot started successfully")
-    logger.info(f"🔗 Bot Link: https://t.me/{updater.bot.username}")
     logger.info("⚙️ Press Ctrl+C to stop")
-    updater.idle()
 
 if __name__ == '__main__':
     main()

@@ -68,7 +68,7 @@ def handle_wallet(update: Update, context: CallbackContext) -> None:
         parse_mode='Markdown'
     )
     
-    # Log the submission (not stored permanently)
+    # Log the submission
     logger.info(f"New submission: {user.username} | Wallet: {wallet}")
 
 def main() -> None:
@@ -80,9 +80,11 @@ def main() -> None:
     dp.add_handler(CallbackQueryHandler(handle_submission, pattern='^submit$'))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_wallet))
 
+    # Start the bot
     updater.start_polling()
-    logger.info("🤖 Bot is now running...")
-    logger.info(f"🔗 Link: https://t.me/{updater.bot.username}")
+    logger.info("🤖 Bot started successfully")
+    logger.info(f"🔗 Bot Link: https://t.me/{updater.bot.username}")
+    logger.info("⚙️ Press Ctrl+C to stop")
     updater.idle()
 
 if __name__ == '__main__':
